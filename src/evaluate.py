@@ -293,7 +293,7 @@ def main():
     client = Client()
     project_name = os.getenv("LANGCHAIN_PROJECT", "prompt-optimization-challenge-resolved")
 
-    jsonl_path = "datasets/bug_to_user_story.jsonl"
+    jsonl_path = "../datasets/bug_to_user_story.jsonl"
 
     if not Path(jsonl_path).exists():
         print(f"❌ Arquivo de dataset não encontrado: {jsonl_path}")

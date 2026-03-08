@@ -1,16 +1,21 @@
 """
 Script para fazer push de prompts otimizados ao LangSmith Prompt Hub.
 
-Este script:
-1. Lê os prompts otimizados de prompts/bug_to_user_story_v2.yml
-2. Valida os prompts
-3. Faz push PÚBLICO para o LangSmith Hub
-4. Adiciona metadados (tags, descrição, técnicas utilizadas)
+Fluxo:
+1. Lê prompts/bug_to_user_story_v2.yml
+2. Valida estrutura
+3. Reconstrói ChatPromptTemplate
+4. Faz push PÚBLICO para o LangSmith Hub
+5. Adiciona descrição e tags
+"""
 
-SIMPLIFICADO: Código mais limpo e direto ao ponto.
+"""
+Push de prompt customizado para LangSmith Hub
+Converte YAML customizado para ChatPromptTemplate automaticamente.
 """
 
 import os
+import re
 import sys
 from dotenv import load_dotenv
 from langchain import hub
@@ -19,37 +24,106 @@ from utils import load_yaml, check_env_vars, print_section_header
 
 load_dotenv()
 
+PROMPT_FILE_PATH = "../prompts/bug_to_user_story_v2.yml"
+PROMPT_KEY = "bug_to_user_story_v2"
 
-def push_prompt_to_langsmith(prompt_name: str, prompt_data: dict) -> bool:
+
+# ==========================================================
+# EXTRAIR VARIÁVEIS DO TEMPLATE
+# ==========================================================
+
+def extract_variables(text: str) -> list:
     """
-    Faz push do prompt otimizado para o LangSmith Hub (PÚBLICO).
-
-    Args:
-        prompt_name: Nome do prompt
-        prompt_data: Dados do prompt
-
-    Returns:
-        True se sucesso, False caso contrário
+    Extrai variáveis no formato:
+    {var} ou {{var}}
     """
-    ...
+    matches = re.findall(r"\{\{?(\w+)\}?\}", text)
+    return list(set(matches))
 
 
-def validate_prompt(prompt_data: dict) -> tuple[bool, list]:
+# ==========================================================
+# CONVERTER YAML → ChatPromptTemplate
+# ==========================================================
+
+def build_chat_prompt(prompt_data: dict) -> ChatPromptTemplate:
     """
-    Valida estrutura básica de um prompt (versão simplificada).
-
-    Args:
-        prompt_data: Dados do prompt
-
-    Returns:
-        (is_valid, errors) - Tupla com status e lista de erros
+    Converte seu formato YAML customizado
+    para ChatPromptTemplate válido.
     """
-    ...
 
+    system_prompt = prompt_data.get("system")
+    user_prompt = prompt_data.get("user")
+
+    if not system_prompt or not user_prompt:
+        raise ValueError("Campos 'system' e 'user' são obrigatórios.")
+
+    # Extrai variáveis automaticamente
+    variables = extract_variables(system_prompt + user_prompt)
+
+    return ChatPromptTemplate.from_messages(
+        [
+            ("system", system_prompt),
+            ("human", user_prompt),
+        ]
+    ).partial() if not variables else ChatPromptTemplate.from_messages(
+        [
+            ("system", system_prompt),
+            ("human", user_prompt),
+        ]
+    )
+
+
+# ==========================================================
+# PUSH
+# ==========================================================
+
+def push_prompt(username: str, prompt_data: dict):
+
+    print_section_header("Construindo ChatPromptTemplate")
+
+    prompt = build_chat_prompt(prompt_data)
+
+    prompt_name = f"{username}/{PROMPT_KEY}"
+
+    print(f"Fazendo push: {prompt_name}")
+
+    hub.push(
+        prompt_name,
+        prompt
+       
+    )
+
+    print("Push realizado com sucesso!")
+
+
+# ==========================================================
+# MAIN
+# ==========================================================
 
 def main():
-    """Função principal"""
-    ...
+
+    print_section_header("INICIANDO PUSH")
+
+    check_env_vars(["LANGSMITH_API_KEY", "USERNAME_LANGSMITH_HUB"])
+
+    data = load_yaml(PROMPT_FILE_PATH)
+
+    if PROMPT_KEY not in data:
+        print(f"Chave '{PROMPT_KEY}' não encontrada no YAML.")
+        return 1
+
+    prompt_data = data[PROMPT_KEY]
+
+    username = os.getenv("USERNAME_LANGSMITH_HUB")
+
+    try:
+        push_prompt(username, prompt_data)
+        print_section_header("PUSH FINALIZADO COM SUCESSO")
+        return 0
+    except Exception as e:
+        print("Erro ao fazer push:")
+        print(e)
+        return 1
 
 
 if __name__ == "__main__":

@@ -24,7 +24,7 @@ from utils import load_yaml, check_env_vars, print_section_header
 
 load_dotenv()
 
-PROMPT_FILE_PATH = "../prompts/bug_to_user_story_v2.yml"
+PROMPT_FILE_PATH = os.path.join(os.path.dirname(__file__), "..", "prompts", "bug_to_user_story_v2.yml")
 PROMPT_KEY = "bug_to_user_story_v2"
 
 

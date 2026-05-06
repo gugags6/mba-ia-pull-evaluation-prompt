@@ -350,8 +350,20 @@ Durante a otimização do prompt `bug_to_user_story_v2`, foram aplicadas múltip
 
 Após 8 iterações, conseguimos refinar as restrições para não gerar "alucinações de regras de negócio", mantendo estrita fidelidade aos relatos (maximizando F1).
 
-* **Link Público LangSmith**: (Substitua por seu link público gerado no LangSmith do seu workspace)
-* **Screenshots**: (Adicione suas screenshots da página do LangSmith do seu projeto)
+* **Link Público LangSmith**: 
+
+https://smith.langchain.com/public/f563e0f1-f2cd-44da-a704-05819a8ed104/r
+
+https://smith.langchain.com/public/4912d6b3-2bd5-478f-b6f0-48a02f28b7ca/r
+
+https://smith.langchain.com/public/a6e22e02-c644-4dd4-a7ca-b8984586c6ac/r
+
+* **Screenshots**: 
+ 
+ ![Print da execução](./evidencia1.png)
+ 
+
+
 
 ### Tabela Comparativa
 
